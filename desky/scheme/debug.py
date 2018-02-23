@@ -1,7 +1,7 @@
 
 import pygame
 
-from desky.scheme.scheme import Scheme
+from desky.scheme.scheme import Scheme, render_text_entry_text
 from desky.button import ButtonState
 
 class DebugScheme(Scheme):
@@ -41,25 +41,25 @@ class DebugScheme(Scheme):
     ############################################################################
     # Panel
     ############################################################################
-    def _render_panel(self, panel, surface, clock, w, h):
+    def render_panel_background(self, panel, surface, clock, w, h):
         self.debug_render(panel, surface, clock, w, h)
 
     def render_panel(self, panel, surface, clock, w, h):
-        self._render_panel(panel, surface, clock, w, h)
+        self.render_panel_background(panel, surface, clock, w, h)
         panel.render_children(self, surface, clock, w, h)
 
     ############################################################################
     # Label
     ############################################################################
-    def _render_label(self, panel, surface, clock, w, h, color=(255, 255, 255)):
+    def render_label_text(self, panel, surface, clock, w, h, color=(255, 255, 255)):
         _, _, tw, th = panel.font.get_rect(panel.text)
         x = panel.align[0] * (w - tw) + panel.offset[0]
         y = panel.align[1] * (h - th) + panel.offset[1]
         panel.font.render_to(surface, (x, y), panel.text, color)
 
     def render_label(self, panel, surface, clock, w, h):
-        self._render_panel(panel, surface, clock, w, h)
-        self._render_label(panel, surface, clock, w, h)
+        self.render_panel_background(panel, surface, clock, w, h)
+        self.render_label_text(panel, surface, clock, w, h)
         panel.render_children(self, surface, clock, w, h)
 
     ############################################################################
@@ -71,7 +71,7 @@ class DebugScheme(Scheme):
 
     def render_text_button(self, panel, surface, clock, w, h):
         self._render_text_button(panel, surface, clock, w, h)
-        self._render_label(panel, surface, clock, w, h)
+        self.render_label_text(panel, surface, clock, w, h)
         panel.render_children(self, surface, clock, w, h)
 
     ############################################################################
@@ -80,71 +80,23 @@ class DebugScheme(Scheme):
     def layout_checkbox(self, panel, w, h):
         panel.offset = (panel.height, 0)
 
-    def _render_checkbox(self, panel, surface, clock, w, h):
+    def render_checkbox_background(self, panel, surface, clock, w, h):
         pygame.draw.rect(surface, (255, 255, 255), pygame.Rect(6, 6, h - 12, h - 12))
         if panel.on:
             pygame.draw.rect(surface, (0, 0, 0), pygame.Rect(h // 2 - 6, h // 2 - 6, 12, 12))
 
     def render_checkbox(self, panel, surface, clock, w, h):
-        self._render_panel(panel, surface, clock, w, h)
-        self._render_checkbox(panel, surface, clock, w, h)
-        self._render_label(panel, surface, clock, w, h)
+        self.render_panel_background(panel, surface, clock, w, h)
+        self.render_checkbox_background(panel, surface, clock, w, h)
+        self.render_label_text(panel, surface, clock, w, h)
         panel.render_children(self, surface, clock, w, h)
 
     ############################################################################
     # Text Entry
     ############################################################################
-    def _render_text_entry(self, panel, surface, clock, w, h):
-        # Get measurements.
-        ascender = panel.font.get_sized_ascender()
-        descender = panel.font.get_sized_descender()
-        th = panel.font.get_sized_height()
-        _, _, startx, _ = panel.font.get_rect(panel.text[:panel.caret])
-        basex, basey, _, _ = panel.font.get_rect(panel.text)
-
-        # Update the view.
-        if panel.caret == 0:
-            panel.viewx = -panel.xoffset
-        else:
-            if startx - panel.viewx > panel.width:
-                panel.viewx = startx - int(panel.width * 0.66)
-            if startx - panel.viewx < 0:
-                panel.viewx = startx - int(panel.width * 0.33)
-            panel.viewx = max(panel.viewx, -panel.xoffset)
-
-        # Draw main text portion.
-        x = -panel.viewx
-        y = int(0.5 * (h - th))
-        tx = x
-        ty = y - basey + descender + th
-        textsurf, _ = panel.font.render(None, (255, 255, 255))
-        surface.blit(textsurf, (tx, ty))
-
-        if panel.focus:
-            # Determine caret / highlight start coordinates.
-            start, end = sorted((panel.caret, panel.select_start))
-            _, _, startx, _ = panel.font.get_rect(panel.text[:start])
-            # Default endx and color so we get a white caret with a 1px width.
-            endx = startx + 1
-            color = (255, 255, 255)
-            # Determine highlight end coordinate and adjust endx and color.
-            if start != end:
-                _, _, endx, _ = panel.font.get_rect(panel.text[:end])
-                color = (128, 128, 255)
-            # Draw the caret or selection area.
-            pygame.draw.rect(surface, color, pygame.Rect(tx + startx, 0.5 * (h - th), endx - startx, th))
-            if start != end:
-                # Draw selection text. To get the selected text correctly
-                # positioned we align the last pixel of the selected text with
-                # endx.
-                basex, basey, tw, _ = panel.font.get_rect(panel.text[start:end])
-                ty = y -basey + descender + th
-                textsurf, _ = panel.font.render(None, (0, 0, 127))
-                surface.blit(textsurf, (tx + endx - tw, ty))
-
     def render_text_entry(self, panel, surface, clock, w, h):
-        self._render_panel(panel, surface, clock, w, h)
-        self._render_text_entry(panel, surface, clock, w, h)
+        self.render_panel_background(panel, surface, clock, w, h)
+        render_text_entry_text(panel, surface, clock, w, h)
         panel.render_children(self, surface, clock, w, h)
 
     ############################################################################
@@ -167,7 +119,7 @@ class DebugScheme(Scheme):
         panel.size = (width, height)
 
     def render_context_menu_panel(self, panel, surface, clock, w, h):
-        self._render_panel(panel, surface, clock, w, h)
+        self.render_panel_background(panel, surface, clock, w, h)
         panel.render_children(self, surface, clock, w, h)
 
 

@@ -1,7 +1,7 @@
 
 import pygame
 
-from desky.scheme.scheme import Scheme
+from desky.scheme.scheme import Scheme, render_text_entry_text
 from desky.button import ButtonState
 
 class DefaultScheme(Scheme):
@@ -135,8 +135,7 @@ class DefaultScheme(Scheme):
 
     def render_text_entry(self, panel, surface, clock, w, h):
         self.render_text_entry_background(panel, surface, clock, w, h)
-        from desky.scheme.debug import DebugScheme
-        DebugScheme._render_text_entry(self, panel, surface, clock, w, h)
+        render_text_entry_text(panel, surface, clock, w, h)
         panel.render_children(self, surface, clock, w, h)
 
     ############################################################################
