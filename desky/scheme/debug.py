@@ -3,6 +3,8 @@ import pygame
 
 from desky.scheme.scheme import Scheme, render_text_entry_text
 from desky.button import ButtonState
+from desky.panel import Panel
+from desky.scroll_panel import ScrollBar, ScrollBarButton
 
 class DebugScheme(Scheme):
     def __init__(self):
@@ -65,12 +67,12 @@ class DebugScheme(Scheme):
     ############################################################################
     # Text Button
     ############################################################################
-    def _render_text_button(self, panel, surface, clock, w, h):
+    def render_text_button_background(self, panel, surface, clock, w, h):
         pygame.draw.rect(surface, self.button_border_colors[panel.state], pygame.Rect(0, 0, w, h))
         pygame.draw.rect(surface, (0, 0, 0), pygame.Rect(2, 2, w - 4, h - 4))
 
     def render_text_button(self, panel, surface, clock, w, h):
-        self._render_text_button(panel, surface, clock, w, h)
+        self.render_text_button_background(panel, surface, clock, w, h)
         self.render_label_text(panel, surface, clock, w, h)
         panel.render_children(self, surface, clock, w, h)
 
@@ -79,6 +81,7 @@ class DebugScheme(Scheme):
     ############################################################################
     def layout_checkbox(self, panel, w, h):
         panel.offset = (panel.height, 0)
+        panel.layout_children(self, w, h)
 
     def render_checkbox_background(self, panel, surface, clock, w, h):
         pygame.draw.rect(surface, (255, 255, 255), pygame.Rect(6, 6, h - 12, h - 12))
@@ -117,9 +120,57 @@ class DebugScheme(Scheme):
             if child.rect.bottom > height:
                 height = child.rect.bottom
         panel.size = (width, height)
+        panel.layout_children(self, w, h)
 
     def render_context_menu_panel(self, panel, surface, clock, w, h):
         self.render_panel_background(panel, surface, clock, w, h)
         panel.render_children(self, surface, clock, w, h)
 
+    ############################################################################
+    # Scroll Bar Button
+    ############################################################################
+    def render_scroll_bar_button(self, panel, surface, clock, w, h):
+        self.render_text_button_background(panel, surface, clock, w, h);
+        panel.render_children(self, surface, clock, w, h)
 
+    ############################################################################
+    # Scroll Bar
+    ############################################################################
+    def setup_scroll_bar(self, panel, gui):
+        panel.button = gui.create(ScrollBarButton)
+        panel.button.parent = panel
+
+    def layout_scroll_bar(self, panel, w, h):
+        panel.button.size = (w, 50)
+        panel.layout_children(self, w, h)
+
+    def render_scroll_bar(self, panel, surface, clock, w, h):
+        self.render_panel_background(panel, surface, clock, w, h);
+        panel.render_children(self, surface, clock, w, h)
+
+    ############################################################################
+    # Scroll Panel
+    ############################################################################
+    def setup_scroll_panel(self, panel, gui):
+        panel.backpanel = gui.create(Panel)
+        panel.backpanel.parent = panel
+        panel.parent_panel = panel.backpanel
+
+        panel.scrollbar = gui.create(ScrollBar)
+        panel.scrollbar.parent = panel
+
+    def layout_scroll_panel(self, panel, w, h):
+        panel.backpanel.width = w
+
+        height = 0
+        for child in panel.backpanel.children:
+            height = max(height, child.rect.bottom)
+        panel.backpanel.height = height
+
+        panel.scrollbar.rect = (panel.width - 10, 0, 10, panel.height)
+
+        panel.layout_children(self, w, h)
+
+    def render_scroll_panel(self, panel, surface, clock, w, h):
+        self.render_panel_background(panel, surface, clock, w, h);
+        panel.render_children(self, surface, clock, w, h)

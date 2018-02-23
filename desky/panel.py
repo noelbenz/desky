@@ -113,6 +113,7 @@ class Panel:
         self.surface = None
         self.accept_mouse_input = False
         self.focus_request = None
+        self.parent_panel = None
         # Children-modifying operations are not safe to perform during events,
         # layout, render, etc. since those events iterate over the children.
         self.move_queue = []
@@ -296,10 +297,14 @@ class Panel:
         assert(self._parent is not None)
         if self._parent is parent:
             return
+        while parent.parent_panel is not None:
+            parent = parent.parent_panel
         parent.add_child_queue.append(self)
         parent.request_layout()
 
     def request_layout(self):
+        if not self.render_dirty:
+            self.request_render()
         if self.layout_dirty:
             return
         self.layout_dirty = True

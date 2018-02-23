@@ -19,6 +19,18 @@ def add_default_methods(clsname):
         panel.render_children(self, surface, clock, w, h)
     setattr(Scheme, "render_" + clsname, default_render)
 
+add_default_methods("panel")
+add_default_methods("label")
+add_default_methods("text_button")
+add_default_methods("checkbox")
+add_default_methods("text_entry")
+add_default_methods("context_menu_item")
+add_default_methods("context_menu_sub_item")
+add_default_methods("context_menu_panel")
+add_default_methods("scroll_panel")
+add_default_methods("scroll_bar")
+add_default_methods("scroll_bar_button")
+
 def render_text_entry_text(panel, surface, clock, w, h):
     # Get measurements.
     ascender = panel.font.get_sized_ascender()
@@ -66,13 +78,4 @@ def render_text_entry_text(panel, surface, clock, w, h):
             ty = y -basey + descender + th
             textsurf, _ = panel.font.render(None, (0, 0, 127))
             surface.blit(textsurf, (tx + endx - tw, ty))
-
-add_default_methods("panel")
-add_default_methods("label")
-add_default_methods("text_button")
-add_default_methods("checkbox")
-add_default_methods("text_entry")
-add_default_methods("context_menu_item")
-add_default_methods("context_menu_sub_item")
-add_default_methods("context_menu_panel")
 
