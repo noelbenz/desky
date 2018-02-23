@@ -10,6 +10,7 @@ from desky.scheme.default import DefaultScheme
 from desky.button import TextButton
 from desky.checkbox import Checkbox
 from desky.text_entry import TextEntry
+from desky.scroll_panel import ScrollPanel
 
 def setup(gui):
 
@@ -41,6 +42,16 @@ def setup(gui):
     text_entry = gui.create(TextEntry)
     text_entry.rect = (x, y, 130, 24)
     y += text_entry.height + 8
+
+    scroll_panel = gui.create(ScrollPanel)
+    scroll_panel.rect = (x, y, 200, 200)
+    y += scroll_panel.height + 8
+
+    for y in range(20):
+        button = gui.create(TextButton)
+        button.parent = scroll_panel
+        button.rect = (0, y * 24, 100, 24)
+        button.text = "Button"
 
 def main():
     pygame.init()

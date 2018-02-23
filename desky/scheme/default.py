@@ -2,9 +2,10 @@
 import pygame
 
 from desky.scheme.scheme import Scheme, render_text_entry_text
+from desky.scheme.debug import DebugScheme
 from desky.button import ButtonState
 
-class DefaultScheme(Scheme):
+class DefaultScheme(DebugScheme):
     def __init__(self):
         super().__init__()
         self.colors_button = {
@@ -161,3 +162,22 @@ class DefaultScheme(Scheme):
         self.render_panel_background(panel, surface, clock, w, h)
         panel.render_children(self, surface, clock, w, h)
 
+    ############################################################################
+    # Scroll Bar
+    ############################################################################
+    def render_scroll_bar_background(self, panel, surface, clock, w, h):
+        pygame.draw.rect(surface, (59, 59, 59), pygame.Rect(0, 0, w, h))
+
+    def render_scroll_bar(self, panel, surface, clock, w, h):
+        self.render_scroll_bar_background(panel, surface, clock, w, h);
+        panel.render_children(self, surface, clock, w, h)
+
+    ############################################################################
+    # Scroll Panel
+    ############################################################################
+    def render_scroll_panel_background(self, panel, surface, clock, w, h):
+        pygame.draw.rect(surface, (41, 41, 41), pygame.Rect(0, 0, w, h))
+
+    def render_scroll_panel(self, panel, surface, clock, w, h):
+        self.render_scroll_panel_background(panel, surface, clock, w, h);
+        panel.render_children(self, surface, clock, w, h)
