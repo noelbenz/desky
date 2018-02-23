@@ -6,7 +6,7 @@ import pygame.scrap
 from desky.clock import Clock
 from desky.panel import Panel
 from desky.layout.docking import DockLayout
-from desky.scheme import Scheme, DebugScheme
+from desky.scheme import Scheme, DebugScheme, DefaultScheme
 
 class GuiEvent:
     def __init__(self):
@@ -266,9 +266,9 @@ def example(setup):
     pygame.freetype.init()
     pygame.scrap.init()
     pygame.key.set_repeat(400, 70)
-    clock = Clock(pygame.time.Clock(), 60)
+    clock = Clock(pygame.time.Clock(), 20)
     gui = Gui()
-    gui.scheme = DebugScheme()
+    gui.scheme = DefaultScheme()
 
     setup(gui)
 

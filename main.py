@@ -5,51 +5,69 @@ import pygame.freetype
 from desky.vector import Vec2
 from desky.graphics import Graphics
 from desky.clock import Clock
+from desky.gui import Gui
+from desky.scheme import DefaultScheme
+from desky.button import TextButton
+from desky.checkbox import Checkbox
+from desky.text_entry import TextEntry
 
-class Desky:
+def setup(gui):
 
-    def __init__(self):
-        self.running = False
-        self.window_size = Vec2(400, 300) * 2
+    x = 40
+    y = 40
 
-        pygame.init()
-        pygame.font.init()
-        pygame.freetype.init()
-        self.screen = pygame.display.set_mode(self.window_size.as_tuple())
-        self.graphics = Graphics(self.screen)
-        self.clock = Clock(pygame.time.Clock(), 60)
+    button = gui.create(TextButton)
+    button.rect = (x, y, 90, 24)
+    button.text = "Normal button"
+    button.align = (0.5, 0.5)
+    button.offset = (0, 0)
+    button.clicked = lambda: print("Clicked.")
+    y += button.height + 8
 
-    def start(self):
-        self.setup()
-        self.running = True
-        while self.running:
-            for event in pygame.event.get():
-                self.process_event(event)
-            self.render()
-            pygame.display.flip()
-            self.clock.tick()
+    button = gui.create(TextButton)
+    button.rect = (x, y, 90, 24)
+    button.togglable = True
+    button.text = "Toggle button"
+    button.align = (0.5, 0.5)
+    button.offset = (0, 0)
+    button.toggled = lambda on: print("Toggled: " + str(on))
+    y += button.height + 8
 
-    def stop(self):
-        self.running = False
+    checkbox = gui.create(Checkbox)
+    checkbox.rect = (x, y, 190, 24)
+    checkbox.text = "Checkbox example"
+    y += checkbox.height + 8
 
-    def process_event(self, event):
-        """Process a pygame event."""
-        if event.type == pygame.QUIT:
-            self.stop()
-        elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            self.stop()
-        else:
-            if not self.map_editor.event(event):
-                self.entity_manager.event(event)
-
-    def render(self):
-        self.screen.fill((30, 30, 30))
-        self.graphics.offset = Vec2()
-        self.map_editor.render(self.graphics, self.clock)
+    text_entry = gui.create(TextEntry)
+    text_entry.rect = (x, y, 130, 24)
+    y += text_entry.height + 8
 
 def main():
-    app = Desky()
-    Desky.start()
+    pygame.init()
+    screen = pygame.display.set_mode((640, 640))
+    pygame.freetype.init()
+    pygame.scrap.init()
+    pygame.key.set_repeat(400, 70)
+    clock = Clock(pygame.time.Clock(), 20)
+    gui = Gui()
+    gui.scheme = DefaultScheme()
+
+    setup(gui)
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                running = False
+            else:
+                gui.event(event)
+        screen.fill((30, 30, 30))
+        gui.layout(screen.get_width(), screen.get_height())
+        gui.render(screen, clock)
+        pygame.display.flip()
+        clock.tick()
 
 if __name__ == "__main__":
     main()

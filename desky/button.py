@@ -58,21 +58,25 @@ class TextButton(Label):
         scheme.render_text_button(self, surface, clock, w, h)
 
 def button_example(gui):
-    from gui.button import TextButton
+    from desky.button import TextButton
 
     button = gui.create(TextButton)
-    button.rect = (50, 50, 100, 30)
+    button.rect = (50, 50, 90, 24)
     button.text = "Normal button"
+    button.align = (0.5, 0.5)
+    button.offset = (0, 0)
     button.clicked = lambda: print("Clicked.")
 
     button = gui.create(TextButton)
-    button.rect = (50, 150, 100, 30)
+    button.rect = (50, 50 + 24 + 8, 90, 24)
     button.togglable = True
     button.text = "Toggle button"
+    button.align = (0.5, 0.5)
+    button.offset = (0, 0)
     button.toggled = lambda on: print("Toggled: " + str(on))
 
 def main():
-    from gui.gui import example
+    from desky.gui import example
     example(button_example)
 
 if __name__ == "__main__":
