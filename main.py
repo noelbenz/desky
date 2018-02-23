@@ -6,7 +6,7 @@ from desky.vector import Vec2
 from desky.graphics import Graphics
 from desky.clock import Clock
 from desky.gui import Gui
-from desky.scheme import DefaultScheme
+from desky.scheme.default import DefaultScheme
 from desky.button import TextButton
 from desky.checkbox import Checkbox
 from desky.text_entry import TextEntry
