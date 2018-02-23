@@ -141,9 +141,11 @@ class DebugScheme(Scheme):
         panel.button.parent = panel
 
     def layout_scroll_bar(self, panel, w, h):
+        if panel.view_height == 0 or panel.total_height == 0:
+            return
         view_offset = panel.view_offset
-        view_height = max(panel.view_height, 1)
-        total_height = max(panel.total_height, 1)
+        view_height = panel.view_height
+        total_height = panel.total_height
         panel.button.size = (w, min(max(view_height / total_height * h, w), h))
         panel.button.y = view_offset / (total_height - view_height) * (h - panel.button.height)
         panel.layout_children(self, w, h)
@@ -168,15 +170,18 @@ class DebugScheme(Scheme):
         panel.parent_panel = panel.backpanel
 
     def layout_scroll_panel(self, panel, w, h):
-        panel.backpanel.width = w - 10
-
         height = 0
         for child in panel.backpanel.children:
             height = max(height, child.rect.bottom)
         panel.backpanel.height = height
 
-        panel.scrollbar.rect = (panel.width - 10, 0, 10, panel.height)
-        panel.scrollbar.update(panel.view_offset, panel.height, panel.backpanel.height)
+        if panel.backpanel.height <= h:
+            panel.scrollbar.rect = (0, 0, 0, 0)
+        else:
+            panel.scrollbar.rect = (panel.width - 10, 0, 10, panel.height)
+            panel.scrollbar.update(panel.view_offset, panel.height, panel.backpanel.height)
+
+        panel.backpanel.width = w - panel.scrollbar.width
 
         panel.layout_children(self, w, h)
 

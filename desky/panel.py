@@ -327,7 +327,10 @@ class Panel:
             self.parent.request_focus(panel)
 
     def remove(self):
+        if self.marked_for_deletion:
+            return
         self.marked_for_deletion = True
+        self.request_layout()
 
     @property
     def removed(self):

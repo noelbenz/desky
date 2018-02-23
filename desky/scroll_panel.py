@@ -95,11 +95,39 @@ def scroll_panel_example(gui):
     scrollpanel = gui.create(ScrollPanel)
     scrollpanel.rect = (50, 50, 200, 200)
 
-    for y in range(30):
+    i = 0
+    buttons = []
+    def add_button():
+        nonlocal i
+        nonlocal buttons
         button = gui.create(TextButton)
-        button.rect = (0, y * 24, 100, 24)
-        button.text = "Button #{}".format(y + 1)
+        button.rect = (0, i * 24, 100, 24)
+        button.text = "Button #{}".format(i + 1)
         button.parent = scrollpanel
+        buttons.append(button)
+        i += 1
+
+    def remove_button():
+        nonlocal i
+        nonlocal buttons
+        if i <= 0:
+            return
+        i -= 1
+        buttons[i].remove()
+        del buttons[i]
+
+    for _ in range(8):
+        add_button()
+
+    button = gui.create(TextButton)
+    button.rect = (50, 270, 200, 24)
+    button.text = "Add button"
+    button.clicked = add_button
+
+    button = gui.create(TextButton)
+    button.rect = (50, 304, 200, 24)
+    button.text = "Remove button"
+    button.clicked = remove_button
 
 def main():
     from desky.gui import example
