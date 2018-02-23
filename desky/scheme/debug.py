@@ -141,7 +141,11 @@ class DebugScheme(Scheme):
         panel.button.parent = panel
 
     def layout_scroll_bar(self, panel, w, h):
-        panel.button.size = (w, 50)
+        view_offset = panel.view_offset
+        view_height = max(panel.view_height, 1)
+        total_height = max(panel.total_height, 1)
+        panel.button.size = (w, min(max(view_height / total_height * h, w), h))
+        panel.button.y = view_offset / (total_height - view_height) * (h - panel.button.height)
         panel.layout_children(self, w, h)
 
     def render_scroll_bar(self, panel, surface, clock, w, h):
@@ -152,15 +156,19 @@ class DebugScheme(Scheme):
     # Scroll Panel
     ############################################################################
     def setup_scroll_panel(self, panel, gui):
+        panel.scrollbar = gui.create(ScrollBar)
+        panel.scrollbar.parent = panel
+
+        def scroll(view_offset):
+            panel.view_offset = view_offset
+        panel.scrollbar.scroll = scroll
+
         panel.backpanel = gui.create(Panel)
         panel.backpanel.parent = panel
         panel.parent_panel = panel.backpanel
 
-        panel.scrollbar = gui.create(ScrollBar)
-        panel.scrollbar.parent = panel
-
     def layout_scroll_panel(self, panel, w, h):
-        panel.backpanel.width = w
+        panel.backpanel.width = w - 10
 
         height = 0
         for child in panel.backpanel.children:
@@ -168,6 +176,7 @@ class DebugScheme(Scheme):
         panel.backpanel.height = height
 
         panel.scrollbar.rect = (panel.width - 10, 0, 10, panel.height)
+        panel.scrollbar.update(panel.view_offset, panel.height, panel.backpanel.height)
 
         panel.layout_children(self, w, h)
 

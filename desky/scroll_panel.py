@@ -1,8 +1,8 @@
 
 import pygame
 
-from desky.panel import Panel
-from desky.button import TextButton
+from desky.panel import Panel, layout_attribute
+from desky.button import TextButton, ButtonState
 
 class ScrollBarButton(TextButton):
 
@@ -15,11 +15,17 @@ class ScrollBarButton(TextButton):
     def render(self, scheme, surface, clock, w, h):
         scheme.render_scroll_bar_button(self, surface, clock, w, h)
 
+@layout_attribute("view_offset", 0)
+@layout_attribute("view_height", 0)
+@layout_attribute("total_height", 0)
 class ScrollBar(Panel):
 
     def __init__(self):
         super().__init__()
         self.button = None
+        self.scroll = None
+        self.drag_offset = None
+        self.accept_mouse_input = True
 
     def setup(self, scheme, gui):
         scheme.setup_scroll_bar(self, gui)
@@ -29,6 +35,28 @@ class ScrollBar(Panel):
 
     def render(self, scheme, surface, clock, w, h):
         scheme.render_scroll_bar(self, surface, clock, w, h)
+
+    def update(self, view_offset, view_height, total_height):
+        self.view_offset = view_offset
+        self.view_height = view_height
+        self.total_height = total_height
+
+    def move_to(self, y):
+        self.scroll(y / self.view_height * self.total_height - self.view_height / 2)
+
+    def mouse_press(self, event):
+        if event.hover and event.button == 1:
+            self.move_to(event.y)
+            self.button.state = ButtonState.PRESSED
+            self.drag_offset = 0
+
+    def mouse_move(self, event):
+        if self.button.state == ButtonState.PRESSED and self.scroll:
+            if self.drag_offset is None:
+                self.drag_offset = self.button.y + self.button.height / 2 - event.y
+            self.move_to(event.y + self.drag_offset)
+        else:
+            self.drag_offset = None
 
 class ScrollPanel(Panel):
 
@@ -43,14 +71,14 @@ class ScrollPanel(Panel):
 
     @view_offset.setter
     def view_offset(self, view_offset):
-        self.backpanel.y = -view_offset
+        self.backpanel.y = min(max(-view_offset, -self.backpanel.height + self.height), 0)
 
     def mouse_press(self, event):
         if event.inside:
             if event.button == 4:
-                self.backpanel.y = min(self.backpanel.y + 20, 0)
+                self.view_offset = self.view_offset - 20
             elif event.button == 5:
-                self.backpanel.y = max(self.backpanel.y - 20, -self.backpanel.height + self.height)
+                self.view_offset = self.view_offset + 20
 
     def setup(self, scheme, gui):
         scheme.setup_scroll_panel(self, gui)
