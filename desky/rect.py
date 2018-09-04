@@ -1,7 +1,7 @@
 
 import unittest
 
-class Rect:
+class FrozenRect:
 
     def __init__(self, x, y, w, h):
         self._x = x
@@ -13,33 +13,17 @@ class Rect:
     def x(self):
         return self._x
 
-    @x.setter
-    def x(self, x):
-        self._x = x
-
     @property
     def y(self):
         return self._y
-
-    @y.setter
-    def y(self, y):
-        self._y = y
 
     @property
     def w(self):
         return self._w
 
-    @w.setter
-    def w(self, w):
-        self._w = w
-
     @property
     def h(self):
         return self._h
-
-    @h.setter
-    def h(self, h):
-        self._h = h
 
     @property
     def right(self):
@@ -48,6 +32,58 @@ class Rect:
     @property
     def bottom(self):
         return self.y + self.h
+
+    def as_tuple(self):
+        return (self.x, self.y, self.w, self.h)
+
+    def copy(self):
+        return Rect(self.x, self.y, self.w, self.h)
+
+    def contains_point(self, x, y):
+        return (x >= self.x and y >= self.y
+                and x < self.x + self.w and y < self.y + self.h)
+
+    def intersects(self, rect):
+        return (self.x < rect.right and self.y < rect.bottom
+                and self.right > rect.x and self.bottom > rect.y)
+
+    def __eq__(self, other):
+        if isinstance(other, Rect):
+            return (self.x == other.x and self.y == other.y
+                    and self.w == other.w and self.h == other.h)
+        return False
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return "Rect({}, {}, {}, {})".format(self.x, self.y, self.w, self.h)
+
+    def __hash__(self):
+        return hash(self.as_tuple())
+
+class Rect(FrozenRect):
+    def __init__(self, x, y, w, h):
+        super().__init__(x, y, w, h)
+
+    @FrozenRect.x.setter
+    def x(self, x):
+        self._x = x
+
+    @FrozenRect.y.setter
+    def y(self, y):
+        self._y = y
+
+    @FrozenRect.w.setter
+    def w(self, w):
+        self._w = w
+
+    @FrozenRect.h.setter
+    def h(self, h):
+        self._h = h
+
+    def frozen_copy(self):
+        return FrozenRect(self.x, self.y, self.w, self.h)
 
     def move(self, x, y):
         self.x += x
@@ -67,28 +103,6 @@ class Rect:
         self.w += x + w
         self.h += y + h
         return self
-
-    def as_tuple(self):
-        return (self.x, self.y, self.w, self.h)
-
-    def copy(self):
-        return Rect(self.x, self.y, self.w, self.h)
-
-    def contains_point(self, x, y):
-        return (x >= self.x and y >= self.y
-                and x < self.x + self.w and y < self.y + self.h)
-
-    def __eq__(self, other):
-        if isinstance(other, Rect):
-            return (self.x == other.x and self.y == other.y
-                    and self.w == other.w and self.h == other.h)
-        return False
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        return "Rect({}, {}, {}, {})".format(self.x, self.y, self.w, self.h)
 
 class RectTest(unittest.TestCase):
 
@@ -158,4 +172,38 @@ class RectTest(unittest.TestCase):
         rect_copy = rect.copy()
         self.assertEqual(rect, rect_copy)
         self.assertFalse(rect is rect_copy)
+
+    def test_intersects(self):
+        scenarios = [
+                # Identical rectangles
+                (Rect(0, 0, 1, 1), Rect(0, 0, 1, 1), True),
+                (Rect(2, 3, 4, 5), Rect(2, 3, 4, 5), True),
+                # Left contains rights
+                (Rect(1, 2, 8, 9), Rect(2, 3, 5, 6), True),
+                # Left intersects right's left side
+                (Rect(0, 2, 2, 4), Rect(1, 1, 9, 9), True),
+                # Left intersects right's top side
+                (Rect(2, 0, 4, 2), Rect(1, 1, 9, 9), True),
+                # Left intersects right's right side
+                (Rect(9, 2, 4, 4), Rect(1, 1, 9, 9), True),
+                # Left intersects right's bottom side
+                (Rect(2, 9, 4, 4), Rect(1, 1, 9, 9), True),
+                # Left is to the left of right
+                (Rect(0, 2, 1, 4), Rect(1, 1, 9, 9), False),
+                # Left is above right
+                (Rect(2, 0, 4, 1), Rect(1, 1, 9, 9), False),
+                # Left is to the right of right
+                (Rect(10, 2, 4, 4), Rect(1, 1, 9, 9), False),
+                # Left below right
+                (Rect(2, 10, 4, 4), Rect(1, 1, 9, 9), False),
+                ]
+
+        for left, right, intersects in scenarios:
+            with self.subTest(left=left, right=right, interesects=intersects):
+                self.assertEqual(intersects, left.intersects(right))
+            with self.subTest(left=right, right=left, interesects=intersects):
+                self.assertEqual(intersects, right.intersects(left))
+
+if __name__ == '__main__':
+    unittest.main()
 
