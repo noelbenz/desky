@@ -30,6 +30,8 @@ add_default_methods("context_menu_panel")
 add_default_methods("scroll_panel")
 add_default_methods("scroll_bar")
 add_default_methods("scroll_bar_button")
+add_default_methods("adjustable_divider")
+add_default_methods("adjustable_divider_grabber")
 
 def render_text_entry_text(panel, surface, clock, w, h):
     # Get measurements.

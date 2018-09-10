@@ -5,6 +5,7 @@ from desky.rect import Rect
 from desky.panel import Panel
 from enum import Enum
 from functools import reduce, partial
+from toolz.dicttoolz import valfilter
 
 # | Type of sizing             | Maximum extra width allocation
 # --------------------------------------------------------------
@@ -38,8 +39,8 @@ class GridLayout:
 
     def __init__(self, *, column_count = 1, row_count = 1, spacing = 0):
         self.panels = dict()
-        self.column_widths = dict()
-        self.row_heights = dict()
+        self.column_sizings = dict()
+        self.row_sizings = dict()
         self.column_count = column_count
         self.row_count = row_count
         self.spacing = spacing
@@ -55,6 +56,15 @@ class GridLayout:
         assert(self.area_empty(rect))
         self.panels[rect.frozen_copy()] = panel
 
+    def remove(self, panel):
+        self.panels = valfilter(lambda p: p != panel, self.panels)
+
+    def clear(self, *, remove_panels):
+        if remove_panels:
+            for panel in self.panels.values():
+                panel.remove()
+        self.panels = dict()
+
     def area_empty(self, rect):
         for rect_other in self.panels.keys():
             if rect.intersects(rect_other):
@@ -62,40 +72,40 @@ class GridLayout:
         return True
 
     def set_fixed_column_sizing(self, column, size):
-        self.column_widths[column] = (self.FIXED, size)
+        self.column_sizings[column] = (self.FIXED, size)
 
     def set_fixed_row_sizing(self, row, size):
-        self.row_heights[row] = (self.FIXED, size)
+        self.row_sizings[row] = (self.FIXED, size)
 
     def set_child_column_sizing(self, column):
-        self.column_widths[column] = (self.CHILD,)
+        self.column_sizings[column] = (self.CHILD,)
 
     def set_child_row_sizing(self, row):
-        self.row_heights[row] = (self.CHILD,)
+        self.row_sizings[row] = (self.CHILD,)
 
     def set_percentage_column_sizing(self, column, percentage):
-        self.column_widths[column] = (self.PERCENTAGE, percentage)
+        self.column_sizings[column] = (self.PERCENTAGE, percentage)
 
     def set_percentage_row_sizing(self, row, percentage):
-        self.row_heights[row] = (self.PERCENTAGE, percentage)
+        self.row_sizings[row] = (self.PERCENTAGE, percentage)
 
     def set_custom_column_sizing(self, column, sizing_func, extra_func=zero_func):
-        self.column_widths[column] = (self.CUSTOM, sizing_func, extra_func)
+        self.column_sizings[column] = (self.CUSTOM, sizing_func, extra_func)
 
     def set_custom_row_sizing(self, row, sizing_func, extra_func=zero_func):
-        self.row_heights[row] = (self.CUSTOM, sizing_func, extra_func)
+        self.row_sizings[row] = (self.CUSTOM, sizing_func, extra_func)
 
     def set_even_column_sizing(self, column):
-        self.column_widths[column] = (self.EVEN,)
+        self.column_sizings[column] = (self.EVEN,)
 
     def set_even_row_sizing(self, row):
-        self.row_heights[row] = (self.EVEN,)
+        self.row_sizings[row] = (self.EVEN,)
 
     def set_fill_column_sizing(self, column):
-        self.column_widths[column] = (self.FILL,)
+        self.column_sizings[column] = (self.FILL,)
 
     def set_fill_row_sizing(self, row):
-        self.row_heights[row] = (self.FILL,)
+        self.row_sizings[row] = (self.FILL,)
 
     def widest_child_in_column(self, column):
         column_rect = Rect(column, 0, 1, self.row_count)
@@ -140,13 +150,13 @@ class GridLayout:
         # Group columns and rows by their sizing types while preserving the order.
 
         for column in range(self.column_count):
-            sizing = self.column_widths.get(column, (self.EVEN,))
+            sizing = self.column_sizings.get(column, (self.EVEN,))
             group = column_sizings_by_type.get(sizing[0], list())
             group.append((column, sizing))
             column_sizings_by_type[sizing[0]] = group
 
         for row in range(self.row_count):
-            sizing = self.row_heights.get(row, (self.EVEN,))
+            sizing = self.row_sizings.get(row, (self.EVEN,))
             group = row_sizings_by_type.get(sizing[0], list())
             group.append((row, sizing))
             row_sizings_by_type[sizing[0]] = group
@@ -158,37 +168,37 @@ class GridLayout:
 
         def calculate_fixed_sizes(sizings_by_type, sizes):
             for sizing_tuple in sizings_by_type.get(self.FIXED, []):
-                columnOrRow, sizing = sizing_tuple
-                sizes[columnOrRow] = sizing[1]
+                column_or_row, sizing = sizing_tuple
+                sizes[column_or_row] = sizing[1]
         calculate_fixed_sizes(column_sizings_by_type, column_widths)
         calculate_fixed_sizes(row_sizings_by_type, row_heights)
 
         def calculate_child_sizes(sizings_by_type, sizes, largest_func):
             for sizing_tuple in sizings_by_type.get(self.CHILD, []):
-                columnOrRow, _ = sizing_tuple
-                sizes[columnOrRow] = largest_func(columnOrRow)
+                column_or_row, _ = sizing_tuple
+                sizes[column_or_row] = largest_func(column_or_row)
         calculate_child_sizes(column_sizings_by_type, column_widths, self.widest_child_in_column)
         calculate_child_sizes(row_sizings_by_type, row_heights, self.tallest_child_in_row)
 
         def calculate_percentage_sizes(sizings_by_type, sizes, area_size):
             for sizing_tuple in sizings_by_type.get(self.PERCENTAGE, []):
-                columnOrRow, sizing = sizing_tuple
-                sizes[columnOrRow] = int(area_size * sizing[1])
+                column_or_row, sizing = sizing_tuple
+                sizes[column_or_row] = int(area_size * sizing[1])
         calculate_percentage_sizes(column_sizings_by_type, column_widths, area.w)
         calculate_percentage_sizes(row_sizings_by_type, row_heights, area.h)
 
         def calculate_custom_sizes(sizings_by_type, sizes, area_size, remaining_size):
             for sizing_tuple in sizings_by_type.get(self.CUSTOM, []):
-                columnOrRow, sizing = sizing_tuple
-                sizes[columnOrRow] = int(sizing[1](area_size, remaining_size))
+                column_or_row, sizing = sizing_tuple
+                sizes[column_or_row] = int(sizing[1](area_size, remaining_size))
         calculate_custom_sizes(column_sizings_by_type, column_widths, area.w, area.w - sum(column_widths))
         calculate_custom_sizes(row_sizings_by_type, row_heights, area.h, area.h - sum(row_heights))
 
         def calculate_even_sizes(sizings_by_type, sizes, remaining_size):
             size = int(remaining_size / len(sizings_by_type.get(self.EVEN, [1])))
             for sizing_tuple in sizings_by_type.get(self.EVEN, []):
-                columnOrRow, _ = sizing_tuple
-                sizes[columnOrRow] = size
+                column_or_row, _ = sizing_tuple
+                sizes[column_or_row] = size
         calculate_even_sizes(
                 column_sizings_by_type,
                 column_widths,
@@ -212,9 +222,9 @@ class GridLayout:
 
         def allocate_extra_percentage(sizings_by_type, sizes, extra):
             for sizing_tuple in sizings_by_type.get(self.PERCENTAGE, []):
-                columnOrRow, _ = sizing_tuple
+                column_or_row, _ = sizing_tuple
                 amount = min(extra, 1)
-                sizes[columnOrRow] += amount
+                sizes[column_or_row] += amount
                 extra -= amount
             return extra
         extra_width = allocate_extra_percentage(column_sizings_by_type, column_widths, extra_width)
@@ -222,9 +232,9 @@ class GridLayout:
 
         def allocate_extra_custom(sizings_by_type, sizes, extra):
             for sizing_tuple in sizings_by_type.get(self.CUSTOM, []):
-                columnOrRow, sizing = sizing_tuple
+                column_or_row, sizing = sizing_tuple
                 amount = int(sizing[2](extra))
-                sizes[columnOrRow] += amount
+                sizes[column_or_row] += amount
                 extra -= amount
             return extra
         extra_width = allocate_extra_custom(column_sizings_by_type, column_widths, extra_width)
@@ -232,13 +242,18 @@ class GridLayout:
 
         def allocate_extra_even(sizings_by_type, sizes, extra):
             for sizing_tuple in sizings_by_type.get(self.EVEN, []):
-                columnOrRow, _ = sizing_tuple
+                column_or_row, _ = sizing_tuple
                 amount = min(extra, 1)
-                sizes[columnOrRow] += amount
+                sizes[column_or_row] += amount
                 extra -= amount
             return extra
         extra_width = allocate_extra_even(column_sizings_by_type, column_widths, extra_width)
         extra_height = allocate_extra_even(row_sizings_by_type, row_heights, extra_height)
+
+        # Save column widths and row heights for users to access.
+
+        self.column_widths = column_widths
+        self.row_heights = row_heights
 
         # Position child panels.
 

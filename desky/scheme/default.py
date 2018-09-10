@@ -181,3 +181,21 @@ class DefaultScheme(DebugScheme):
     def render_scroll_panel(self, panel, surface, clock, w, h):
         self.render_scroll_panel_background(panel, surface, clock, w, h);
         panel.render_children(self, surface, clock, w, h)
+
+    ############################################################################
+    # Adjustable Divider Grabber
+    ############################################################################
+
+    def render_adjustable_divider_grabber(self, panel, surface, clock, w, h):
+        center_x = w // 2
+        center_y = h // 2
+        if w >= h:
+            pygame.draw.rect(surface, (41, 41, 41), pygame.Rect(center_x - 5, center_y - 1, 2, 2))
+            pygame.draw.rect(surface, (41, 41, 41), pygame.Rect(center_x - 1, center_y - 1, 2, 2))
+            pygame.draw.rect(surface, (41, 41, 41), pygame.Rect(center_x + 3, center_y - 1, 2, 2))
+        if h >= w:
+            pygame.draw.rect(surface, (41, 41, 41), pygame.Rect(center_x - 1, center_y - 5, 2, 2))
+            pygame.draw.rect(surface, (41, 41, 41), pygame.Rect(center_x - 1, center_y - 1, 2, 2))
+            pygame.draw.rect(surface, (41, 41, 41), pygame.Rect(center_x - 1, center_y + 3, 2, 2))
+
+        panel.render_children(self, surface, clock, w, h)

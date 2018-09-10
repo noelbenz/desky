@@ -108,6 +108,7 @@ class Panel:
         self._rect = Panel.Rect(0, 0, 0, 0, self)
         self._margins = Panel.Rect(0, 0, 0, 0, self)
         self._padding = Panel.Rect(0, 0, 0, 0, self)
+        self.setup_dirty = True
         self.layout_dirty = True
         self.render_dirty = True
         self.surface = None
@@ -277,7 +278,7 @@ class Panel:
         if self.parent is None:
             return pos
         else:
-            return self.parent.to_world(self.x + pos[0], self.y + pos[1])
+            return self.parent.to_world((self.x + pos[0], self.y + pos[1]))
 
     def to_local(self, pos):
         if self.parent is None:
@@ -301,6 +302,13 @@ class Panel:
             parent = parent.parent_panel
         parent.add_child_queue.append(self)
         parent.request_layout()
+
+    def request_setup(self):
+        if not self.layout_dirty:
+            self.request_layout()
+        if self.setup_dirty:
+            return
+        self.setup_dirty = True
 
     def request_layout(self):
         if not self.render_dirty:

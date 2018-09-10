@@ -11,6 +11,7 @@ from desky.button import TextButton
 from desky.checkbox import Checkbox
 from desky.text_entry import TextEntry
 from desky.scroll_panel import ScrollPanel
+from desky.adjustable_divider import AdjustableDivider
 
 def setup(gui):
 
@@ -47,11 +48,15 @@ def setup(gui):
     scroll_panel.rect = (x, y, 200, 200)
     y += scroll_panel.height + 8
 
-    for y in range(20):
+    for i in range(20):
         button = gui.create(TextButton)
         button.parent = scroll_panel
-        button.rect = (0, y * 24, 100, 24)
+        button.rect = (0, i * 24, 100, 24)
         button.text = "Button"
+
+    adjustable_divider = gui.create(AdjustableDivider, column_count=4, row_count=3)
+    adjustable_divider.rect = (x, y, 200, 200)
+    y += adjustable_divider.height + 8
 
 def main():
     pygame.init()

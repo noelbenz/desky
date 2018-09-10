@@ -5,6 +5,7 @@ from desky.scheme.scheme import Scheme, render_text_entry_text
 from desky.button import ButtonState
 from desky.panel import Panel
 from desky.scroll_panel import ScrollBar, ScrollBarButton
+from desky.adjustable_divider import AdjustableDividerGrabber
 
 class DebugScheme(Scheme):
     def __init__(self):
@@ -43,6 +44,7 @@ class DebugScheme(Scheme):
     ############################################################################
     # Panel
     ############################################################################
+
     def render_panel_background(self, panel, surface, clock, w, h):
         self.debug_render(panel, surface, clock, w, h)
 
@@ -53,6 +55,7 @@ class DebugScheme(Scheme):
     ############################################################################
     # Label
     ############################################################################
+
     def render_label_text(self, panel, surface, clock, w, h, color=(255, 255, 255)):
         _, _, tw, th = panel.font.get_rect(panel.text)
         x = panel.align[0] * (w - tw) + panel.offset[0]
@@ -67,6 +70,7 @@ class DebugScheme(Scheme):
     ############################################################################
     # Text Button
     ############################################################################
+
     def render_text_button_background(self, panel, surface, clock, w, h):
         pygame.draw.rect(surface, self.button_border_colors[panel.state], pygame.Rect(0, 0, w, h))
         pygame.draw.rect(surface, (0, 0, 0), pygame.Rect(2, 2, w - 4, h - 4))
@@ -79,6 +83,7 @@ class DebugScheme(Scheme):
     ############################################################################
     # Checkbox
     ############################################################################
+
     def layout_checkbox(self, panel, w, h):
         panel.offset = (panel.height, 0)
         panel.layout_children(self, w, h)
@@ -97,6 +102,7 @@ class DebugScheme(Scheme):
     ############################################################################
     # Text Entry
     ############################################################################
+
     def render_text_entry(self, panel, surface, clock, w, h):
         self.render_panel_background(panel, surface, clock, w, h)
         render_text_entry_text(panel, surface, clock, w, h)
@@ -105,6 +111,7 @@ class DebugScheme(Scheme):
     ############################################################################
     # Context Menu
     ############################################################################
+
     def render_context_menu_item(self, panel, surface, clock, w, h):
         self.render_text_button(panel, surface, clock, w, h)
 
@@ -129,6 +136,7 @@ class DebugScheme(Scheme):
     ############################################################################
     # Scroll Bar Button
     ############################################################################
+
     def render_scroll_bar_button(self, panel, surface, clock, w, h):
         self.render_text_button_background(panel, surface, clock, w, h);
         panel.render_children(self, surface, clock, w, h)
@@ -136,6 +144,7 @@ class DebugScheme(Scheme):
     ############################################################################
     # Scroll Bar
     ############################################################################
+
     def setup_scroll_bar(self, panel, gui):
         panel.button = gui.create(ScrollBarButton)
         panel.button.parent = panel
@@ -157,6 +166,7 @@ class DebugScheme(Scheme):
     ############################################################################
     # Scroll Panel
     ############################################################################
+
     def setup_scroll_panel(self, panel, gui):
         panel.scrollbar = gui.create(ScrollBar)
         panel.scrollbar.parent = panel
@@ -188,3 +198,27 @@ class DebugScheme(Scheme):
     def render_scroll_panel(self, panel, surface, clock, w, h):
         self.render_panel_background(panel, surface, clock, w, h);
         panel.render_children(self, surface, clock, w, h)
+
+    ############################################################################
+    # Adjustable Divider Grabber
+    ############################################################################
+
+    def render_adjustable_divider_grabber(self, panel, surface, clock, w, h):
+        self.render_text_button_background(panel, surface, clock, w, h);
+        panel.render_children(self, surface, clock, w, h)
+
+    ############################################################################
+    # Adjustable Divider
+    ############################################################################
+
+    def setup_adjustable_divider(self, panel, gui):
+        panel.update_grabbers(gui)
+
+    def layout_adjustable_divider(self, panel, w, h):
+        panel.grid.layout(panel)
+        panel.layout_children(self, w, h)
+
+    def render_scroll_panel(self, panel, surface, clock, w, h):
+        self.render_panel_background(panel, surface, clock, w, h);
+        panel.render_children(self, surface, clock, w, h)
+

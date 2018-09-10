@@ -85,6 +85,7 @@ class Gui:
         self.world.add_child_queue.append(instance)
         instance.request_layout()
         instance.setup(self.scheme, self)
+        instance.setup_dirty = False
         return instance
 
     def find_hover(self, x, y):
@@ -207,17 +208,30 @@ class Gui:
             self.broadcast_key_event(gui_event, "key_release")
 
     def layout(self, window_width, window_height):
+
+        def setup(pnl):
+            for child in pnl.children:
+                setup(child)
+            if pnl.setup_dirty:
+                pnl.setup(self.scheme, self)
+                pnl.setup_dirty = False
+
+        setup(self.world)
+
         def remove_children(pnl):
             children = list()
             for child in pnl.children:
                 if not child.marked_for_deletion:
                     remove_children(child)
                     children.append(child)
+                else:
+                    pnl.request_layout()
             pnl.children = children
+
         remove_children(self.world)
 
-        def process_child_operations(pnl):
-            # Add a new children.
+        def add_children(pnl):
+            # Add a new child.
             if len(pnl.add_child_queue) > 0:
                 pnl.request_layout()
                 for child in pnl.add_child_queue:
@@ -233,14 +247,10 @@ class Gui:
                     pnl.children.insert(0, child)
                     child.request_layout()
             pnl.add_child_queue = []
-            # Recurse over a copy of the children.
-            for child in pnl.children[:]:
-                # Remove child.
-                if child.marked_for_deletion:
-                    pnl.children.remove(child)
-                    pnl.request_layout()
-                process_child_operations(child)
-        process_child_operations(self.world)
+            for child in pnl.children:
+                add_children(child)
+
+        add_children(self.world)
 
         if self.world.focus_request is not None:
             self.set_focus(self.world.focus_request)
